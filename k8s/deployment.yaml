@@ -1,0 +1,21 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-scheduling-pro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job-scheduling-pro
+  template:
+    metadata:
+      labels:
+        app: job-scheduling-pro
+    spec:
+      containers:
+        - name: job-scheduling-pro
+          image: amoghseth25/job-scheduling-pro:1.0
+          ports:
+            - containerPort: 5000
+          imagePullPolicy: Always
