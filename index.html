@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Scheduling Pro</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            text-align: center;
+            padding: 20px;
+            color: white;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .box {
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 12px;
+            width: 300px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .add { background: #28a745; }
+        .schedule { background: #007bff; }
+        .clear { background: #dc3545; }
+        .sample { background: #ff9800; }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 90%;
+            background: white;
+            color: black;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #007bff;
+            color: white;
+        }
+
+        .delete-btn {
+            background: red;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+
+        #output {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>💼 Job Scheduling System (Pro)</h2>
+
+<div class="container">
+
+    <div class="box">
+        <h3>Add Job</h3>
+        <input id="id" placeholder="Job ID"><br>
+        <input id="deadline" type="number" placeholder="Deadline"><br>
+        <input id="profit" type="number" placeholder="Profit"><br>
+
+        <button class="add" onclick="addJob()">Add Job</button>
+        <button class="schedule" onclick="schedule()">Schedule</button>
+        <button class="clear" onclick="clearJobs()">Clear All</button>
+        <button class="sample" onclick="addSample()">Sample Data</button>
+    </div>
+
+</div>
+
+<table id="jobTable">
+    <tr>
+        <th>Job ID</th>
+        <th>Deadline</th>
+        <th>Profit</th>
+        <th>Action</th>
+    </tr>
+</table>
+
+<h3 id="output"></h3>
+
+<script>
+
+let jobs = [];
+
+// ✅ ADD JOB (NO DUPLICATES ALLOWED)
+function addJob() {
+    let id = document.getElementById("id").value.trim();
+    let deadline = document.getElementById("deadline").value;
+    let profit = document.getElementById("profit").value;
+
+    if(id === "" || deadline === "" || profit === ""){
+        alert("⚠️ Fill all fields!");
+        return;
+    }
+
+    // 🔴 Duplicate check
+    let exists = jobs.some(job => job.id === id);
+    if(exists){
+        alert("❌ Job ID already exists!");
+        return;
+    }
+
+    jobs.push({
+        id: id,
+        deadline: parseInt(deadline),
+        profit: parseInt(profit)
+    });
+
+    renderTable();
+
+    // clear inputs
+    document.getElementById("id").value = "";
+    document.getElementById("deadline").value = "";
+    document.getElementById("profit").value = "";
+}
+
+
+// 📋 SHOW TABLE
+function renderTable() {
+    let table = document.getElementById("jobTable");
+
+    table.innerHTML = `
+        <tr>
+            <th>Job ID</th>
+            <th>Deadline</th>
+            <th>Profit</th>
+            <th>Action</th>
+        </tr>`;
+
+    jobs.forEach((job, index) => {
+        let row = table.insertRow();
+
+        row.insertCell(0).innerHTML = job.id;
+        row.insertCell(1).innerHTML = job.deadline;
+        row.insertCell(2).innerHTML = job.profit;
+        row.insertCell(3).innerHTML =
+            `<button class="delete-btn" onclick="deleteJob(${index})">Delete</button>`;
+    });
+}
+
+
+// ❌ DELETE JOB
+function deleteJob(index) {
+    jobs.splice(index, 1);
+    renderTable();
+}
+
+
+// 🧹 CLEAR ALL
+function clearJobs() {
+    jobs = [];
+    renderTable();
+    document.getElementById("output").innerHTML = "";
+}
+
+
+// 📊 SAMPLE DATA
+function addSample() {
+    jobs = [
+        {id: "A", deadline: 2, profit: 100},
+        {id: "B", deadline: 1, profit: 50},
+        {id: "C", deadline: 2, profit: 70}
+    ];
+    renderTable();
+}
+
+
+// 🚀 SEND TO BACKEND
+function schedule() {
+    if(jobs.length === 0){
+        alert("⚠️ Add jobs first!");
+        return;
+    }
+
+    fetch("http://127.0.0.1:5000/schedule", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(jobs)
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("output").innerHTML =
+            "✅ Scheduled Jobs: " + data.jobs.join(", ") +
+            "<br>💰 Total Profit: " + data.profit;
+    })
+    .catch(err => {
+        alert("❌ Backend not running!");
+        console.error(err);
+    });
+}
+
+</script>
+
+</body>
+</html>
